@@ -9,7 +9,7 @@ const BASE_URL = 'https://pixabay.com/api/';
     
 
     fetchArticles() {
-        const url = `${BASE_URL}?image_type=photo&orientation=horizontal&q=${this.searchQuery}&${this.page}&per_page=12&key=${API_KEY}`;
+        const url = `${BASE_URL}?image_type=photo&orientation=horizontal&q=${this.searchQuery}&page=${this.page}&per_page=12&key=${API_KEY}`;
         const options = {
             method: 'GET',
             headers: {
