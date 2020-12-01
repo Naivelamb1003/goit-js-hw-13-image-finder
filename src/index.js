@@ -7,6 +7,7 @@ import './images/icon-close.svg';
 import { alert, Stack } from '@pnotify/core';
 import '@pnotify/core/dist/PNotify.css';
 import '@pnotify/core/dist/BrightTheme.css';
+import { Visitor } from 'handlebars';
 
 const formText = document.querySelector('#search-form');
 const searchLine = document.querySelector('.search-line');
@@ -17,17 +18,22 @@ const controlModalImage = new modalImage();
 controlModalImage.init();
 
 let ApiService = null;
-loadMoreBtn.disabled = true;
-
+let loadMoreBtn_visibility = false;
 const debounceRenderImage = debounce(function () {
-  
-  loadMoreBtn.disabled = false;
   ApiService = new ImageApiService();
-  if(searchLine.value !='') {
+  if (searchLine.value != '') {
     ApiService.searchQuery = searchLine.value;
     ApiService.fetchArticles().then(renderImageCard).catch(onFetchError);
+    if (!loadMoreBtn_visibility) {
+      loadMoreBtn_visibility = true;
+      loadMoreBtn.classList.toggle('hidden');
+    }
+    if (searchLine.value ==='' && loadMoreBtn_visibility){
+      loadMoreBtn_visibility = false;
+      loadMoreBtn.classList.toggle('hidden');
+    }
+  
   }
-    
 }, 500);
 
 searchLine.addEventListener('input', debounceRenderImage);
@@ -50,17 +56,18 @@ function submitSechPicter(e) {
 
 function renderImageCard(response) {
   let markup = null;
-  if (response.status == 404){
+  if (response.status == 404 || response.hits.length === 0) {
     onNotFoundError();
-    }else{
-      markup = imageCardTp(response);
-      contentList.innerHTML = markup;
-    }
-   
+    loadMoreBtn_visibility = false;
+      loadMoreBtn.classList.toggle('hidden');
+  } else {
+    markup = imageCardTp(response);
+    contentList.innerHTML = markup;
+  }
 }
 
 function onFetchError(response) {
-  if(searchLine.value === ''){
+  if (searchLine.value === '') {
     alert({
       text: 'Lost connection',
       stack: myStack,
@@ -78,8 +85,7 @@ function onNotFoundError() {
 function fetchImages() {
   loadMoreBtn.disabled = true;
   const scrollToY =
-    loadMoreBtn.getBoundingClientRect().top +
-    window.pageYOffset;
+    loadMoreBtn.getBoundingClientRect().top + window.pageYOffset;
   ApiService.incrementPage();
   ApiService.fetchArticles()
     .then(response => {
